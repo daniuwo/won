@@ -1,4 +1,4 @@
-# HYBBS2
-基于HYPHP MVC框架开发的PHP论坛程序，拥有插件、模板扩展。
+# WON 蜗牛建站系统
+基于HYPHP MVC框架开发的建站程序，拥有插件、模板扩展。
 
-如果需要下载正式版 请到https://github.com/hyyyp/HYBBS2/releases 下载
+当前还在开发阶段,官网 http://won.cm
