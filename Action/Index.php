@@ -12,4 +12,11 @@ class Index extends Common {
 		$this->v('title','模块');
 		return $this->display('module');
 	}
+	// 网站维护
+	public function maintenance(){
+		$this->v('title','网站维护');
+		
+		return $this->display("maintenance");
+
+	}
 }
