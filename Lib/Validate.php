@@ -1,785 +1,1403 @@
 <?php
-// +------------------------------------------------------
-// | Description: 数据验证类
-// | Author: 红着自己玩 <956716282@qq.com>
-// | Date: 2019-08-27 13:44:50 
-// | LastEditors: 红着自己玩 <956716282@qq.com>
-// | LastEditTime: 2019-08-28 20:41:49 
-// | Github: https://github.com/daniuwo/won.git
-// | Copyright (c) 2019 http://won.cm All rights reserved.
-// +------------------------------------------------------
+// +----------------------------------------------------------------------
+// | ThinkPHP [ WE CAN DO IT JUST THINK ]
+// +----------------------------------------------------------------------
+// | Copyright (c) 2006~2017 http://thinkphp.cn All rights reserved.
+// +----------------------------------------------------------------------
+// | Licensed ( http://www.apache.org/licenses/LICENSE-2.0 )
+// +----------------------------------------------------------------------
+// | Author: liu21st <liu21st@gmail.com>
+// +----------------------------------------------------------------------
+
 namespace Lib;
+
+use SplFileObject;
+use Lib\validate\ValidateRule;
 
 class Validate
 {
-    /**
-     * 是否为IP（IPv4）
-     * @param $ip
-     * @return bool
-     */
-    public static function isIP($ip)
-    {
-        $isIP = filter_var($ip, FILTER_VALIDATE_IP) ? TRUE : FALSE;
-        return $isIP;
-    }
-    /**
-     * 是否为邮箱地址
-     * @param $mail
-     * @return bool
-     */
-    public static function isMail($mail)
-    {
-        $isMail = filter_var($mail, FILTER_VALIDATE_EMAIL) ? TRUE : FALSE;
-        return $isMail;
-    }
-    /**
-     * 是否为URL
-     * @param $url
-     * @return bool
-     */
-    public static function isURL($url)
-    {
-        $isMail = filter_var($url, FILTER_VALIDATE_URL) ? TRUE : FALSE;
-        return $isMail;
-    }
-    /**
-     * 是否为正整数
-     * @param $num
-     * @return bool
-     */
-    public static function isPosiInt($num)
-    {
-        $isPosiInt = is_int($num) && $num > 0;
-        return $isPosiInt;
-    }
-    /**
-     * 是否在范围内
-     * @param $num
-     * @param int $min
-     * @param null $max
-     * @return bool
-     */
-    public static function isBetween($num, $min = 0, $max = NULL)
-    {
-        $isBetween = $num >= $min;
-        if ($max) {
-            $isBetween = $isBetween && $num <= $max;
-        }
-        return $isBetween;
-    }
-    /**
-     * 是否为有效长度
-     * @param $str
-     * @param int $min
-     * @param null $max
-     * @return bool
-     */
-    public static function isValidLen($str, $min = 1, $max = NULL)
-    {
-        $length = mb_strlen($str);
-        $isValidLen = self::isBetween($length, $min, $max);
-        return $isValidLen;
-    }
-    // +------------------------------------------------------
-    // | description: 验证字符串是否空
-    // | param {type} $val
-    // | return: bool
-    // +------------------------------------------------------
-    function isEmpty($val)
-    {
-        if (!is_string($val)) return false; //是否是字符串类型
 
-        if (empty($val)) return false; //是否已设定
+    /**
+     * 自定义验证类型
+     * @var array
+     */
+    protected static $type = [];
 
-        if ($val == '') return false; //是否为空
+    /**
+     * 验证类型别名
+     * @var array
+     */
+    protected $alias = [
+        '>' => 'gt', '>=' => 'egt', '<' => 'lt', '<=' => 'elt', '=' => 'eq', 'same' => 'eq',
+    ];
 
-        return true;
-    }
-    /*
-    -----------------------------------------------------------
-    函数名称：isNumber
-    简要描述：检查输入的是否为数字
-    输入：string
-    输出：boolean
-    修改日志：------
-    -----------------------------------------------------------
-    */
-    function isNumber($val)
+    /**
+     * 当前验证规则
+     * @var array
+     */
+    protected $rule = [];
+
+    /**
+     * 验证提示信息
+     * @var array
+     */
+    protected $message = [];
+
+    /**
+     * 验证字段描述
+     * @var array
+     */
+    protected $field = [];
+
+    /**
+     * 默认规则提示
+     * @var array
+     */
+    protected static $typeMsg = [
+        'require'     => ':attribute不能为空',
+        'number'      => ':attribute必须是数字',
+        'integer'     => ':attribute必须是整数',
+        'float'       => ':attribute必须是浮点数',
+        'boolean'     => ':attribute必须是布尔值',
+        'email'       => ':attribute格式不符',
+        'array'       => ':attribute必须是数组',
+        'accepted'    => ':attribute必须是yes、on或者1',
+        'date'        => ':attribute格式不符合',
+        'file'        => ':attribute不是有效的上传文件',
+        'image'       => ':attribute不是有效的图像文件',
+        'alpha'       => ':attribute只能是字母',
+        'alphaNum'    => ':attribute只能是字母和数字',
+        'alphaDash'   => ':attribute只能是字母、数字和下划线_及破折号-',
+        'activeUrl'   => ':attribute不是有效的域名或者IP',
+        'chs'         => ':attribute只能是汉字',
+        'chsAlpha'    => ':attribute只能是汉字、字母',
+        'chsAlphaNum' => ':attribute只能是汉字、字母和数字',
+        'chsDash'     => ':attribute只能是汉字、字母、数字和下划线_及破折号-',
+        'url'         => ':attribute不是有效的URL地址',
+        'ip'          => ':attribute不是有效的IP地址',
+        'dateFormat'  => ':attribute必须使用日期格式 :rule',
+        'in'          => ':attribute必须在 :rule 范围内',
+        'notIn'       => ':attribute不能在 :rule 范围内',
+        'between'     => ':attribute只能在 :1 - :2 之间',
+        'notBetween'  => ':attribute不能在 :1 - :2 之间',
+        'length'      => ':attribute长度不符合要求 :rule',
+        'max'         => ':attribute长度不能超过 :rule',
+        'min'         => ':attribute长度不能小于 :rule',
+        'after'       => ':attribute日期不能小于 :rule',
+        'before'      => ':attribute日期不能超过 :rule',
+        'expire'      => '不在有效期内 :rule',
+        'allowIp'     => '不允许的IP访问',
+        'denyIp'      => '禁止的IP访问',
+        'confirm'     => ':attribute和确认字段:2不一致',
+        'different'   => ':attribute和比较字段:2不能相同',
+        'egt'         => ':attribute必须大于等于 :rule',
+        'gt'          => ':attribute必须大于 :rule',
+        'elt'         => ':attribute必须小于等于 :rule',
+        'lt'          => ':attribute必须小于 :rule',
+        'eq'          => ':attribute必须等于 :rule',
+        'regex'       => ':attribute不符合指定规则',
+        'method'      => '无效的请求类型',
+        'fileSize'    => '上传文件大小不符',
+        'fileExt'     => '上传文件后缀不符',
+        'fileMime'    => '上传文件类型不符',
+    ];
+
+    /**
+     * 当前验证场景
+     * @var array
+     */
+    protected $currentScene = null;
+
+    /**
+     * 内置正则验证规则
+     * @var array
+     */
+    protected $regex = [
+        'alpha'       => '/^[A-Za-z]+$/',
+        'alphaNum'    => '/^[A-Za-z0-9]+$/',
+        'alphaDash'   => '/^[A-Za-z0-9\-\_]+$/',
+        'chs'         => '/^[\x{4e00}-\x{9fa5}]+$/u',
+        'chsAlpha'    => '/^[\x{4e00}-\x{9fa5}a-zA-Z]+$/u',
+        'chsAlphaNum' => '/^[\x{4e00}-\x{9fa5}a-zA-Z0-9]+$/u',
+        'chsDash'     => '/^[\x{4e00}-\x{9fa5}a-zA-Z0-9\_\-]+$/u',
+        'mobile'      => '/^1[3-9][0-9]\d{8}$/',
+        'idCard'      => '/(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$)/',
+        'zip'         => '/\d{6}/',
+    ];
+
+    /**
+     * Filter_var 规则
+     * @var array
+     */
+    protected $filter = [
+        'email'   => FILTER_VALIDATE_EMAIL,
+        'ip'      => [FILTER_VALIDATE_IP, FILTER_FLAG_IPV4 | FILTER_FLAG_IPV6],
+        'integer' => FILTER_VALIDATE_INT,
+        'url'     => FILTER_VALIDATE_URL,
+        'macAddr' => FILTER_VALIDATE_MAC,
+        'float'   => FILTER_VALIDATE_FLOAT,
+    ];
+
+    /**
+     * 验证场景定义
+     * @var array
+     */
+    protected $scene = [];
+
+    /**
+     * 验证失败错误信息
+     * @var array
+     */
+    protected $error = [];
+
+    /**
+     * 是否批量验证
+     * @var bool
+     */
+    protected $batch = false;
+
+    /**
+     * 场景需要验证的规则
+     * @var array
+     */
+    protected $only = [];
+
+    /**
+     * 场景需要移除的验证规则
+     * @var array
+     */
+    protected $remove = [];
+
+    /**
+     * 场景需要追加的验证规则
+     * @var array
+     */
+    protected $append = [];
+
+    /**
+     * 架构函数
+     * @access public
+     * @param array $rules 验证规则
+     * @param array $message 验证提示信息
+     * @param array $field 验证字段描述信息
+     */
+    public function __construct(array $rules = [], $message = [], $field = [])
     {
-        if (preg_match("^[0-9]+$", $val))
-            return true;
-        return false;
+        $this->rule    = $rules + $this->rule;
+        $this->message = array_merge($this->message, $message);
+        $this->field   = array_merge($this->field, $field);
     }
 
-    /*
-    -----------------------------------------------------------
-    函数名称：isPhone
-    简要描述：检查输入的是否为电话
-    输入：string
-    输出：boolean
-    修改日志：------
-    -----------------------------------------------------------
-    */
-    function isPhone($val)
+    /**
+     * 创建一个验证器类
+     * @access public
+     * @param array $rules 验证规则
+     * @param array $message 验证提示信息
+     * @param array $field 验证字段描述信息
+     */
+    public static function make($rules = [], $message = [], $field = [])
     {
-        //eg: xxx-xxxxxxxx-xxx | xxxx-xxxxxxx-xxx ...
-        if (r("^((0/d{2,3})-)(/d{7,8})(-(/d{3,}))?$", $val))
-            return true;
-        return false;
+        return new self($rules, $message, $field);
     }
 
-    /*
-    -----------------------------------------------------------
-    函数名称：isPostcode
-    简要描述：检查输入的是否为邮编
-    输入：string
-    输出：boolean
-    修改日志：------
-    -----------------------------------------------------------
-    */
-    function isPostcode($val)
+    /**
+     * 添加字段验证规则
+     * @access protected
+     * @param string|array  $name  字段名称或者规则数组
+     * @param mixed         $rule  验证规则或者字段描述信息
+     * @return $this
+     */
+    public function rule($name, $rule = '')
     {
-        if (preg_match("^[0-9]{4,6}$", $val))
-            return true;
-        return false;
-    }
-
-    /*
-    -----------------------------------------------------------
-    函数名称：isEmail
-    简要描述：邮箱地址合法性检查
-    输入：string
-    输出：boolean
-    修改日志：------
-    -----------------------------------------------------------
-    */
-    function isEmail($val, $domain = "")
-    {
-        if (!$domain) {
-            if (preg_match("/^[a-z0-9-_.]+@[/da-z][/./w-]+/.[a-z]{2,4}$/i", $val)) {
-                return true;
-            } else
-                return false;
+        if (is_array($name)) {
+            $this->rule = $name + $this->rule;
+            if (is_array($rule)) {
+                $this->field = array_merge($this->field, $rule);
+            }
         } else {
-            if (preg_match("/^[a-z0-9-_.]+@" . $domain . "$/i", $val)) {
-                return true;
-            } else
-                return false;
+            $this->rule[$name] = $rule;
         }
-    } //end func
 
-    /*
-    -----------------------------------------------------------
-    函数名称：isName
-    简要描述：姓名昵称合法性检查，只能输入中文英文
-    输入：string
-    输出：boolean
-    修改日志：------
-    -----------------------------------------------------------
-    */
-    function isName($val)
-    {
-        if (preg_match("/^[/x80-/xffa-zA-Z0-9]{3,60}$/", $val)) //2008-7-24
-        {
-            return true;
-        }
-        return false;
-    } //end func
-
-
-    /*
-    -----------------------------------------------------------
-    函数名称:isStrLength($theelement, $min, $max)
-    简要描述:检查字符串长度是否符合要求
-    输入:mixed (字符串，最小长度，最大长度)
-    输出:boolean
-    修改日志:------
-    -----------------------------------------------------------
-    */
-    function isStrLength($val, $min, $max)
-    {
-        $theelement = trim($val);
-        if (preg_match("^[a-zA-Z0-9]{" . $min . "," . $max . "}$", $val))
-            return true;
-        return false;
+        return $this;
     }
 
-
-    /*
-    -----------------------------------------------------------
-    函数名称:isNumberLength($theelement, $min, $max)
-    简要描述:检查字符串长度是否符合要求
-    输入:mixed (字符串，最小长度，最大长度)
-    输出:boolean
-    修改日志:------
-    -----------------------------------------------------------
-    */
-    function isNumLength($val, $min, $max)
+    /**
+     * 注册扩展验证（类型）规则
+     * @access public
+     * @param string    $type  验证规则类型
+     * @param mixed     $callback callback方法(或闭包)
+     * @return void
+     */
+    public static function extend($type, $callback = null)
     {
-        $theelement = trim($val);
-        if (preg_match("^[0-9]{" . $min . "," . $max . "}$", $val))
-            return true;
-        return false;
-    }
-
-    /*
-    -----------------------------------------------------------
-    函数名称:isNumberLength($theelement, $min, $max)
-    简要描述:检查字符串长度是否符合要求
-    输入:mixed (字符串，最小长度，最大长度)
-    输出:boolean
-    修改日志:------
-    -----------------------------------------------------------
-    */
-    function isEngLength($val, $min, $max)
-    {
-        $theelement = trim($val);
-        if (preg_match("^[a-zA-Z]{" . $min . "," . $max . "}$", $val))
-            return true;
-        return false;
-    }
-
-    /*
-    -----------------------------------------------------------
-    函数名称：isEnglish
-    简要描述：检查输入是否为英文
-    输入：string
-    输出：boolean
-    作者：------
-    修改日志：------
-    -----------------------------------------------------------
-    */
-    function isEnglish($theelement)
-    {
-        if (preg_match("[/x80-/xff].", $theelement)) {
-            return false;
-        }
-        return true;
-    }
-
-    /*
-    -----------------------------------------------------------
-    函数名称：isChinese
-    简要描述：检查是否输入为汉字
-    输入：string
-    输出：boolean
-    修改日志：------
-    -----------------------------------------------------------
-    */
-        /*
-    function isChinese($sInBuf)//有问题的函数
-    {
-        $iLen= strlen($sInBuf);
-        for($i= 0; $i< $iLen; $i++)
-        {
-        if(ord($sInBuf{$i})>=0x80)
-        {
-        if( (ord($sInBuf{$i})>=0x81 && ord($sInBuf{$i})<=0xFE) && ((ord($sInBuf{$i+1})>=0x40 && ord($sInBuf{$i+1}) < 0x7E) || (ord($sInBuf{$i+1}) > 0x7E && ord($sInBuf{$i+1})<=0xFE)) )
-        {
-        if(ord($sInBuf{$i})>0xA0 && ord($sInBuf{$i})<0xAA)
-            {
-            //有中文标点
-                return false;
-        }
-        }
-        else
-        {
-        //有日文或其它文字
-        return false;
-        }
-        $i++;
-        }
-            else
-            {
-                return false;
-        }
-        }
-        return true;
-    }*/
-
-
-    function isChinese($sInBuf) //正确的函数
-    {
-        if (preg_match("/^[/x7f-/xff]+$/", $sInBuf)) { //兼容gb2312,utf-8
-
-            return true;
+        if (is_array($type)) {
+            self::$type = array_merge(self::$type, $type);
         } else {
-            return false;
+            self::$type[$type] = $callback;
         }
     }
-    /*
-    -----------------------------------------------------------
-    函数名称:isDomain($Domain)
-    简要描述:检查一个（英文）域名是否合法
-    输入:string 域名
-    输出:boolean
-    修改日志:------
-    -----------------------------------------------------------
-    */
-    function isDomain($Domain)
+
+    /**
+     * 设置验证规则的默认提示信息
+     * @access public
+     * @param string|array  $type  验证规则类型名称或者数组
+     * @param string        $msg  验证提示信息
+     * @return void
+     */
+    public static function setTypeMsg($type, $msg = null)
     {
-        if (!preg_matchi("^[0-9a-z]+[0-9a-z/.-]+[0-9a-z]+$", $Domain)) {
-            return false;
-        }
-        if (!preg_matchi("/.", $Domain)) {
-            return false;
-        }
-
-        if (preg_matchi("/-/.", $Domain) or preg_matchi("/-/-", $Domain) or preg_matchi("/./.", $Domain) or preg_matchi("/./-", $Domain)) {
-            return false;
-        }
-
-        $aDomain = explode(".", $Domain);
-        if (!preg_matchi("[a-zA-Z]", $aDomain[count($aDomain) - 1])) {
-            return false;
-        }
-
-        if (strlen($aDomain[0]) > 63 || strlen($aDomain[0]) < 1) {
-            return false;
-        }
-        return true;
-    }
-    /*
-    * 验证是否日期的函数
-    * @param unknown_type $date
-    * @param unknown_type $format
-    * @throws Exception
-    * @return boolean
-    */
-    function validateDate($date, $format = 'YYYY-MM-DD')
-    {
-        switch ($format) {
-            case 'YYYY/MM/DD':
-            case 'YYYY-MM-DD':
-                list($y, $m, $d) = preg_split('/[-./ ]/', $date);
-                break;
-
-            case 'YYYY/DD/MM':
-            case 'YYYY-DD-MM':
-                list($y, $d, $m) = preg_split('/[-./ ]/', $date);
-                break;
-
-            case 'DD-MM-YYYY':
-            case 'DD/MM/YYYY':
-                list($d, $m, $y) = preg_split('/[-./ ]/', $date);
-                break;
-
-            case 'MM-DD-YYYY':
-            case 'MM/DD/YYYY':
-                list($m, $d, $y) = preg_split('/[-./ ]/', $date);
-                break;
-
-            case 'YYYYMMDD':
-                $y = substr($date, 0, 4);
-                $m = substr($date, 4, 2);
-                $d = substr($date, 6, 2);
-                break;
-
-            case 'YYYYDDMM':
-                $y = substr($date, 0, 4);
-                $d = substr($date, 4, 2);
-                $m = substr($date, 6, 2);
-                break;
-
-            default:
-                throw new Exception("Invalid Date Format");
-        }
-        return checkdate($m, $d, $y);
-    }
-
-
-    /*
-    -----------------------------------------------------------
-    函数名称：isDate
-    简要描述：检查日期是否符合0000-00-00
-    输入：string
-    输出：boolean
-    修改日志：------
-    -----------------------------------------------------------
-    */
-    function isDate($sDate)
-    {
-        if (preg_match("^[0-9]{4}/-[][0-9]{2}/-[0-9]{2}$", $sDate)) {
-            return true;
+        if (is_array($type)) {
+            self::$typeMsg = array_merge(self::$typeMsg, $type);
         } else {
-            return false;
+            self::$typeMsg[$type] = $msg;
         }
     }
-    /*
-    -----------------------------------------------------------
-    函数名称：isTime
-    简要描述：检查日期是否符合0000-00-00 00:00:00
-    输入：string
-    输出：boolean
-    修改日志：------
-    -----------------------------------------------------------
-    */
-    function isTime($sTime)
+
+    /**
+     * 设置提示信息
+     * @access public
+     * @param string|array  $name  字段名称
+     * @param string        $message 提示信息
+     * @return Validate
+     */
+    public function message($name, $message = '')
     {
-        if (preg_match("^[0-9]{4}/-[][0-9]{2}/-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$", $sTime)) {
-            return true;
+        if (is_array($name)) {
+            $this->message = array_merge($this->message, $name);
         } else {
-            return false;
+            $this->message[$name] = $message;
         }
+
+        return $this;
     }
 
-    /*
-    -----------------------------------------------------------
-    函数名称:isMoney($val)
-    简要描述:检查输入值是否为合法人民币格式
-    输入:string
-    输出:boolean
-    修改日志:------
-    -----------------------------------------------------------
-    */
-    function isMoney($val)
+    /**
+     * 设置验证场景
+     * @access public
+     * @param string  $name  场景名
+     * @return $this
+     */
+    public function scene($name)
     {
-        if (preg_match("^[0-9]{1,}$", $val))
-            return true;
-        if (preg_match("^[0-9]{1,}/.[0-9]{1,2}$", $val))
-            return true;
-        return false;
+        // 设置当前场景
+        $this->currentScene = $name;
+
+        return $this;
     }
 
-    /*
-    * 验证手机号
-    * @param int $mobile
-    */
-    function valid_mobile($mobile)
+    /**
+     * 判断是否存在某个验证场景
+     * @access public
+     * @param string $name 场景名
+     * @return bool
+     */
+    public function hasScene($name)
     {
-        if (strlen($mobile) != 11) return false;
-        if (preg_match('/13[0-9]/d{8}|15[0|1|2|3|5|6|7|8|9]/d{8}|18[0|5|6|7|8|9]/d{8}/', $mobile)) {
-            return true;
-        } else {
-            return false;
-        }
+        return isset($this->scene[$name]) || method_exists($this, 'scene' . $name);
     }
 
-    /*
-    * 缩略图生成函数，最好使用GD2
-    *
-    * @param string $srcFile 要生成缩略图的文件
-    * @param int $toW 缩略图宽度
-    * @param int $toH 缩略图高度
-    * @param string $toFile 缩略图文件
-    */
-    function ImageResize($srcFile, $toW, $toH, $toFile = "")
+    /**
+     * 设置批量验证
+     * @access public
+     * @param bool $batch  是否批量验证
+     * @return $this
+     */
+    public function batch($batch = true)
     {
-        if ($toFile == "") {
-            $toFile = $srcFile;
-        }
-        $info = "";
-        $data = GetImageSize($srcFile, $info);
-        switch ($data[2]) {
-            case 1:
-                if (!function_exists("imagecreatefromgif")) {
-                    //echo "你的GD库不能使用GIF格式的图片，请使用Jpeg或PNG格式！<a href='javascript:go(-1);'>返回</a>";
-                    return false;
+        $this->batch = $batch;
+
+        return $this;
+    }
+
+    /**
+     * 指定需要验证的字段列表
+     * @access public
+     * @param array $fields  字段名
+     * @return $this
+     */
+    public function only($fields)
+    {
+        $this->only = $fields;
+
+        return $this;
+    }
+
+    /**
+     * 移除某个字段的验证规则
+     * @access public
+     * @param string|array  $field  字段名
+     * @param mixed         $rule   验证规则 true 移除所有规则
+     * @return $this
+     */
+    public function remove($field, $rule = true)
+    {
+        if (is_array($field)) {
+            foreach ($field as $key => $rule) {
+                if (is_int($key)) {
+                    $this->remove($rule);
+                } else {
+                    $this->remove($key, $rule);
                 }
-                $im = ImageCreateFromGIF($srcFile);
-                break;
-            case 2:
-                if (!function_exists("imagecreatefromjpeg")) {
-                    //echo "你的GD库不能使用jpeg格式的图片，请使用其它格式的图片！<a href='javascript:go(-1);'>返回</a>";
-                    return false;
-                }
-                $im = ImageCreateFromJpeg($srcFile);
-                break;
-            case 3:
-                $im = ImageCreateFromPNG($srcFile);
-                break;
-        }
-        $srcW = ImageSX($im);
-        $srcH = ImageSY($im);
-        $toWH = $toW / $toH;
-        $srcWH = $srcW / $srcH;
-        if ($toWH <= $srcWH) {
-            $ftoW = $toW;
-            $ftoH = $ftoW * ($srcH / $srcW);
+            }
         } else {
-            $ftoH = $toH;
-            $ftoW = $ftoH * ($srcW / $srcH);
+            if (is_string($rule)) {
+                $rule = explode('|', $rule);
+            }
+
+            $this->remove[$field] = $rule;
         }
-        if ($srcW > $toW || $srcH > $toH) {
-            if (function_exists("imagecreatetruecolor")) {
-                @$ni = ImageCreateTrueColor($ftoW, $ftoH);
-                if ($ni) ImageCopyResampled($ni, $im, 0, 0, 0, 0, $ftoW, $ftoH, $srcW, $srcH);
-                else {
-                    $ni = ImageCreate($ftoW, $ftoH);
-                    ImageCopyResized($ni, $im, 0, 0, 0, 0, $ftoW, $ftoH, $srcW, $srcH);
-                }
+
+        return $this;
+    }
+
+    /**
+     * 追加某个字段的验证规则
+     * @access public
+     * @param string|array  $field  字段名
+     * @param mixed         $rule   验证规则
+     * @return $this
+     */
+    public function append($field, $rule = null)
+    {
+        if (is_array($field)) {
+            foreach ($field as $key => $rule) {
+                $this->append($key, $rule);
+            }
+        } else {
+            if (is_string($rule)) {
+                $rule = explode('|', $rule);
+            }
+
+            $this->append[$field] = $rule;
+        }
+
+        return $this;
+    }
+
+    /**
+     * 数据自动验证
+     * @access public
+     * @param array     $data  数据
+     * @param mixed     $rules  验证规则
+     * @param string    $scene 验证场景
+     * @return bool
+     */
+    public function check($data, $rules = [], $scene = '')
+    {
+        $this->error = [];
+
+        if (empty($rules)) {
+            // 读取验证规则
+            $rules = $this->rule;
+        }
+
+        // 获取场景定义
+        $this->getScene($scene);
+
+        foreach ($this->append as $key => $rule) {
+            if (!isset($rules[$key])) {
+                $rules[$key] = $rule;
+            }
+        }
+
+        foreach ($rules as $key => $rule) {
+            // field => 'rule1|rule2...' field => ['rule1','rule2',...]
+            if (strpos($key, '|')) {
+                // 字段|描述 用于指定属性名称
+                list($key, $title) = explode('|', $key);
             } else {
-                $ni = ImageCreate($ftoW, $ftoH);
-                ImageCopyResized($ni, $im, 0, 0, 0, 0, $ftoW, $ftoH, $srcW, $srcH);
+                $title = isset($this->field[$key]) ? $this->field[$key] : $key;
             }
-            if (function_exists('imagejpeg')) ImageJpeg($ni, $toFile);
-            else ImagePNG($ni, $toFile);
-            ImageDestroy($ni);
-        } else {
-            ImageDestroy($im);
-            return false;
+
+            // 场景检测
+            if (!empty($this->only) && !in_array($key, $this->only)) {
+                continue;
+            }
+
+            // 获取数据 支持二维数组
+            $value = $this->getDataValue($data, $key);
+
+            // 字段验证
+            if ($rule instanceof \Closure) {
+                // 匿名函数验证 支持传入当前字段和所有字段两个数据
+                $result = call_user_func_array($rule, [$value, $data]);
+            } elseif ($rule instanceof ValidateRule) {
+                //  验证因子
+                $result = $this->checkItem($key, $value, $rule->getRule(), $data, $rule->getTitle() ?: $title, $rule->getMsg());
+            } else {
+                $result = $this->checkItem($key, $value, $rule, $data, $title);
+            }
+
+            if (true !== $result) {
+                // 没有返回true 则表示验证失败
+                if (!empty($this->batch)) {
+                    // 批量验证
+                    if (is_array($result)) {
+                        $this->error = array_merge($this->error, $result);
+                    } else {
+                        $this->error[$key] = $result;
+                    }
+                } else {
+                    $this->error = $result;
+                    return false;
+                }
+            }
         }
-        ImageDestroy($im);
+
+        return !empty($this->error) ? false : true;
+    }
+
+    /**
+     * 根据验证规则验证数据
+     * @access public
+     * @param  mixed     $value 字段值
+     * @param  mixed     $rules 验证规则
+     * @return bool
+     */
+    public function checkRule($value, $rules)
+    {
+        if ($rules instanceof \Closure) {
+            return call_user_func_array($rules, [$value]);
+        } elseif ($rules instanceof ValidateRule) {
+            $rules = $rules->getRule();
+        } elseif (is_string($rules)) {
+            $rules = explode('|', $rules);
+        }
+
+        foreach ($rules as $key => $rule) {
+            if ($rule instanceof \Closure) {
+                $result = call_user_func_array($rule, [$value]);
+            } else {
+                // 判断验证类型
+                list($type, $rule) = $this->getValidateType($key, $rule);
+
+                $callback = isset(self::$type[$type]) ? self::$type[$type] : [$this, $type];
+
+                $result = call_user_func_array($callback, [$value, $rule]);
+            }
+
+            if (true !== $result) {
+                return $result;
+            }
+        }
+
         return true;
     }
-    //去除字符串空格
-    static function strTrim($str)
-    {
-        return preg_replace("/\/s/", "", $str);
-    }
 
-    //验证用户名
-    static function userName($str, $type, $len)
+    /**
+     * 获取当前验证类型及规则
+     * @access public
+     * @param  mixed     $key
+     * @param  mixed     $rule
+     * @return array
+     */
+    protected function getValidateType($key, $rule)
     {
-        $str = self::strTrim($str);
-        if ($len < strlen($str)) {
-            return false;
-        } else {
-            switch ($type) {
-                case "EN": //纯英文
-                    if (preg_match("/^[a-zA-Z]+$/", $str)) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                    break;
-                case "ENNUM": //英文数字
-                    if (preg_match("/^[a-zA-Z0-9]+$/", $str)) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                    break;
-                case "ALL":    //允许的符号(|-_字母数字)
-                    if (preg_match("/^[\w\_]+$/", $str)) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                    break;
+        // 判断验证类型
+        if (!is_numeric($key)) {
+            return [$key, $rule, $key];
+        }
+
+        if (strpos($rule, ':')) {
+            list($type, $rule) = explode(':', $rule, 2);
+            if (isset($this->alias[$type])) {
+                // 判断别名
+                $type = $this->alias[$type];
             }
-        }
-    }
-
-    //验证密码长度
-    static function passWord($min, $max, $str)
-    {
-        $str = self::strTrim($str);
-        if (strlen($str) >= $min && strlen($str) <= $max) {
-            return true;
+            $info = $type;
+        } elseif (method_exists($this, $rule)) {
+            $type = $rule;
+            $info = $rule;
+            $rule = '';
         } else {
-            return false;
+            $type = 'is';
+            $info = $rule;
         }
+
+        return [$type, $rule, $info];
     }
 
-    //验证Email
-    static function Email($str)
+    /**
+     * 验证单个字段规则
+     * @access protected
+     * @param string    $field  字段名
+     * @param mixed     $value  字段值
+     * @param mixed     $rules  验证规则
+     * @param array     $data  数据
+     * @param string    $title  字段描述
+     * @param array     $msg  提示信息
+     * @return mixed
+     */
+    protected function checkItem($field, $value, $rules, $data, $title = '', $msg = [])
     {
-        $str = self::strTrim($str);
-
-        if (preg_match("/^([a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+((\.[a-zA-Z0-9_-]{2,3}){1,2})$/i", $str)) {
+        if (isset($this->remove[$field]) && true === $this->remove[$field] && empty($this->append[$field])) {
+            // 字段已经移除 无需验证
             return true;
-        } else {
-            return false;
         }
-    }
 
-    //验证身份证(中国)
-    static function idCard($str)
-    {
-        $str = self::strTrim($str);
-        if (preg_match("/^([0-9]{15}|[0-9]{17}[0-9a-z])$/i", $str)) {
-            return true;
-        } else {
-            return false;
+        // 支持多规则验证 require|in:a,b,c|... 或者 ['require','in'=>'a,b,c',...]
+        if (is_string($rules)) {
+            $rules = explode('|', $rules);
         }
-    }
 
-    //验证座机电话
-    static function Phone($type, $str)
-    {
-        $str = self::strTrim($str);
-        switch ($type) {
-            case "CHN":
-                if (preg_match("/^([0-9]{3}|0[0-9]{3})-[0-9]{7,8}$/", $str)) {
-                    return true;
-                } else {
-                    return false;
+        if (isset($this->append[$field])) {
+            // 追加额外的验证规则
+            $rules = array_merge($rules, $this->append[$field]);
+        }
+
+        $i = 0;
+        foreach ($rules as $key => $rule) {
+            if ($rule instanceof \Closure) {
+                $result = call_user_func_array($rule, [$value, $data]);
+                $info   = is_numeric($key) ? '' : $key;
+            } else {
+                // 判断验证类型
+                list($type, $rule, $info) = $this->getValidateType($key, $rule);
+
+                if (isset($this->append[$field]) && in_array($info, $this->append[$field])) {
+
+                } elseif (isset($this->remove[$field]) && in_array($info, $this->remove[$field])) {
+                    // 规则已经移除
+                    $i++;
+                    continue;
                 }
-                break;
-            case "INT":
-                if (preg_match("/^[0-9]{4}-([0-9]{3}|0[0-9]{3})-[0-9]{7,8}$/", $str)) {
-                    return true;
-                } else {
-                    return false;
-                }
-                break;
-        }
-    }
 
-    /*
-    * 过滤二维数组的值
-    * @param 二维数组 $arr_data
-    * @param 一维数组 $field
-    * @return Ambigous <multitype:, string, unknown>
-    */
-    function getarrayfield($arr_data, $field)
-    {
-        $resultArr = array();
-        foreach ($arr_data as $key => $value) {
-            foreach ($field as $k => $v) {
-                if (array_key_exists($v, $value)) //存在才添加
-                {
-                    $resultArr[$key][$v] = $value[$v];
+                if ('must' == $info || 0 === strpos($info, 'require') || (!is_null($value) && '' !== $value)) {
+                    // 验证类型
+                    $callback = isset(self::$type[$type]) ? self::$type[$type] : [$this, $type];
+                    // 验证数据
+                    $result = call_user_func_array($callback, [$value, $rule, $data, $field, $title]);
                 } else {
-                    $resultArr[$key][$v] = "不存在这个列";
+                    $result = true;
                 }
             }
+
+            if (false === $result) {
+                // 验证失败 返回错误信息
+                if (!empty($msg[$i])) {
+                    $message = $msg[$i];
+                } else {
+                    $message = $this->getRuleMsg($field, $title, $info, $rule);
+                }
+
+                return $message;
+            } elseif (true !== $result) {
+                // 返回自定义错误信息
+                if (is_string($result) && false !== strpos($result, ':')) {
+                    $result = str_replace(
+                        [':attribute', ':rule'],
+                        [$title, (string) $rule],
+                        $result);
+                }
+
+                return $result;
+            }
+            $i++;
         }
 
-        return $resultArr;
-    }
-    /*
-    * 获取客户端IP地址
-    * @return ip
-    */
-    function get_client_ip()
-    {
-        if (getenv("HTTP_CLIENT_IP") && strcasecmp(getenv("HTTP_CLIENT_IP"), "unknown"))
-            $ip = getenv("HTTP_CLIENT_IP");
-        else if (getenv("HTTP_X_FORWARDED_FOR") && strcasecmp(getenv("HTTP_X_FORWARDED_FOR"), "unknown"))
-            $ip = getenv("HTTP_X_FORWARDED_FOR");
-        else if (getenv("REMOTE_ADDR") && strcasecmp(getenv("REMOTE_ADDR"), "unknown"))
-            $ip = getenv("REMOTE_ADDR");
-        else if (isset($_SERVER['REMOTE_ADDR']) && $_SERVER['REMOTE_ADDR'] && strcasecmp($_SERVER['REMOTE_ADDR'], "unknown"))
-            $ip = $_SERVER['REMOTE_ADDR'];
-        else
-            $ip = "unknown";
-        return ($ip);
+        return $result;
     }
 
-    function get_http_user_agent()
+    /**
+     * 验证是否和某个字段的值一致
+     * @access public
+     * @param mixed     $value 字段值
+     * @param mixed     $rule  验证规则
+     * @param array     $data  数据
+     * @param string    $field 字段名
+     * @return bool
+     */
+    public function confirm($value, $rule, $data = [], $field = '')
     {
-        return isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : "";
+        if ('' == $rule) {
+            if (strpos($field, '_confirm')) {
+                $rule = strstr($field, '_confirm', true);
+            } else {
+                $rule = $field . '_confirm';
+            }
+        }
+
+        return $this->getDataValue($data, $rule) === $value;
     }
 
-    /*
-    * 从IP地址获取真实地址
-    * @param IP $ip
-    */
-    function get_address_from_ip($ip)
+    /**
+     * 验证是否和某个字段的值是否不同
+     * @access public
+     * @param mixed $value 字段值
+     * @param mixed $rule  验证规则
+     * @param array $data  数据
+     * @return bool
+     */
+    public function different($value, $rule, $data = [])
     {
-        $url = 'http://www.youdao.com/smartresult-xml/search.s?type=ip&q=';
-        $xml = file_get_contents($url . $ip);
-        $data = simplexml_load_string($xml);
-        return $data->product->location;
+        return $this->getDataValue($data, $rule) != $value;
     }
 
-
-    /*
-    * 产生随机字串，可用来自动生成密码 默认长度6位 字母和数字混合
-    * @param string $len 长度
-    * @param string $type 字串类型
-    * 0 字母 1 数字 2 大写字母 3 小写字母 默认混合 4中文
-    * @param string $addChars 额外字符
-    * @return string
-    */
-    function rand_string($len = 6, $type = '', $addChars = '')
+    /**
+     * 验证是否大于等于某个值
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @param array     $data  数据
+     * @return bool
+     */
+    public function egt($value, $rule, $data = [])
     {
-        $str = '';
-        switch ($type) {
-            case 0:
-                $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' . $addChars;
+        return $value >= $this->getDataValue($data, $rule);
+    }
+
+    /**
+     * 验证是否大于某个值
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @param array     $data  数据
+     * @return bool
+     */
+    public function gt($value, $rule, $data)
+    {
+        return $value > $this->getDataValue($data, $rule);
+    }
+
+    /**
+     * 验证是否小于等于某个值
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @param array     $data  数据
+     * @return bool
+     */
+    public function elt($value, $rule, $data = [])
+    {
+        return $value <= $this->getDataValue($data, $rule);
+    }
+
+    /**
+     * 验证是否小于某个值
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @param array     $data  数据
+     * @return bool
+     */
+    public function lt($value, $rule, $data = [])
+    {
+        return $value < $this->getDataValue($data, $rule);
+    }
+
+    /**
+     * 验证是否等于某个值
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function eq($value, $rule)
+    {
+        return $value == $rule;
+    }
+
+    /**
+     * 必须验证
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function must($value, $rule = null)
+    {
+        return !empty($value) || '0' == $value;
+    }
+
+    /**
+     * 验证字段值是否为有效格式
+     * @access public
+     * @param mixed     $value  字段值
+     * @param string    $rule  验证规则
+     * @param array     $data  验证数据
+     * @return bool
+     */
+    public function is($value, $rule, $data = [])
+    {
+        $rule = preg_replace_callback('/_([a-zA-Z])/', function ($match) {
+            return strtoupper($match[1]);
+        }, $rule);
+
+        switch (lcfirst($rule)) {
+            case 'require':
+                // 必须
+                $result = !empty($value) || '0' == $value;
                 break;
-            case 1:
-                $chars = str_repeat('0123456789', 3);
+            case 'accepted':
+                // 接受
+                $result = in_array($value, ['1', 'on', 'yes']);
                 break;
-            case 2:
-                $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' . $addChars;
+            case 'date':
+                // 是否是一个有效日期
+                $result = false !== strtotime($value);
                 break;
-            case 3:
-                $chars = 'abcdefghijklmnopqrstuvwxyz' . $addChars;
+            case 'activeUrl':
+                // 是否为有效的网址
+                $result = checkdnsrr($value);
                 break;
-            case 4:
-                $chars = "们以我到他会作时要动国产的一是工就年阶义发成部民可出能方进在了不和有大这主中人上为来分生对于学下级地个用同行面说种过命度革而多子后自社加小机也经力线本电高量长党得实家定深法表着水理化争现所二起政三好十战无农使性前等反体合斗路图把结第里正新开论之物从当两些还天资事队批点育重其思与间内去因件日利相由压员气业代全组数果期导平各基或月毛然如应形想制心样干都向变关问比展那它最及外没看治提五解系林者米群头意只明四道马认次文通但条较克又公孔领军流入接席位情运器并飞原油放立题质指建区验活众很教决特此常石强极土少已根共直团统式转别造切九你取西持总料连任志观调七么山程百报更见必真保热委手改管处己将修支识病象几先老光专什六型具示复安带每东增则完风回南广劳轮科北打积车计给节做务被整联步类集号列温装即毫知轴研单色坚据速防史拉世设达尔场织历花受求传口断况采精金界品判参层止边清至万确究书术状厂须离再目海交权且儿青才证低越际八试规斯近注办布门铁需走议县兵固除般引齿千胜细影济白格效置推空配刀叶率述今选养德话查差半敌始片施响收华觉备名红续均药标记难存测士身紧液派准斤角降维板许破述技消底床田势端感往神便贺村构照容非搞亚磨族火段算适讲按值美态黄易彪服早班麦削信排台声该击素张密害侯草何树肥继右属市严径螺检左页抗苏显苦英快称坏移约巴材省黑武培著河帝仅针怎植京助升王眼她抓含苗副杂普谈围食射源例致酸旧却充足短划剂宣环落首尺波承粉践府鱼随考刻靠够满夫失包住促枝局菌杆周护岩师举曲春元超负砂封换太模贫减阳扬江析亩木言球朝医校古呢稻宋听唯输滑站另卫字鼓刚写刘微略范供阿块某功套友限项余倒卷创律雨让骨远帮初皮播优占死毒圈伟季训控激找叫云互跟裂粮粒母练塞钢顶策双留误础吸阻故寸盾晚丝女散焊功株亲院冷彻弹错散商视艺灭版烈零室轻血倍缺厘泵察绝富城冲喷壤简否柱李望盘磁雄似困巩益洲脱投送奴侧润盖挥距触星松送获兴独官混纪依未突架宽冬章湿偏纹吃执阀矿寨责熟稳夺硬价努翻奇甲预职评读背协损棉侵灰虽矛厚罗泥辟告卵箱掌氧恩爱停曾溶营终纲孟钱待尽俄缩沙退陈讨奋械载胞幼哪剥迫旋征槽倒握担仍呀鲜吧卡粗介钻逐弱脚怕盐末阴丰雾冠丙街莱贝辐肠付吉渗瑞惊顿挤秒悬姆烂森糖圣凹陶词迟蚕亿矩康遵牧遭幅园腔订香肉弟屋敏恢忘编印蜂急拿扩伤飞露核缘游振操央伍域甚迅辉异序免纸夜乡久隶缸夹念兰映沟乙吗儒杀汽磷艰晶插埃燃欢铁补咱芽永瓦倾阵碳演威附牙芽永瓦斜灌欧献顺猪洋腐请透司危括脉宜笑若尾束壮暴企菜穗楚汉愈绿拖牛份染既秋遍锻玉夏疗尖殖井费州访吹荣铜沿替滚客召旱悟刺脑措贯藏敢令隙炉壳硫煤迎铸粘探临薄旬善福纵择礼愿伏残雷延烟句纯渐耕跑泽慢栽鲁赤繁境潮横掉锥希池败船假亮谓托伙哲怀割摆贡呈劲财仪沉炼麻罪祖息车穿货销齐鼠抽画饲龙库守筑房歌寒喜哥洗蚀废纳腹乎录镜妇恶脂庄擦险赞钟摇典柄辩竹谷卖乱虚桥奥伯赶垂途额壁网截野遗静谋弄挂课镇妄盛耐援扎虑键归符庆聚绕摩忙舞遇索顾胶羊湖钉仁音迹碎伸灯避泛亡答勇频皇柳哈揭甘诺概宪浓岛袭谁洪谢炮浇斑讯懂灵蛋闭孩释乳巨徒私银伊景坦累匀霉杜乐勒隔弯绩招绍胡呼痛峰零柴簧午跳居尚丁秦稍追梁折耗碱殊岗挖氏刃剧堆赫荷胸衡勤膜篇登驻案刊秧缓凸役剪川雪链渔啦脸户洛孢勃盟买杨宗焦赛旗滤硅炭股坐蒸凝竟陷枪黎救冒暗洞犯筒您宋弧爆谬涂味津臂障褐陆啊健尊豆拔莫抵桑坡缝警挑污冰柬嘴啥饭塑寄赵喊垫丹渡耳刨虎笔稀昆浪萨茶滴浅拥穴覆伦娘吨浸袖珠雌妈紫戏塔锤震岁貌洁剖牢锋疑霸闪埔猛诉刷狠忽灾闹乔唐漏闻沈熔氯荒茎男凡抢像浆旁玻亦忠唱蒙予纷捕锁尤乘乌智淡允叛畜俘摸锈扫毕璃宝芯爷鉴秘净蒋钙肩腾枯抛轨堂拌爸循诱祝励肯酒绳穷塘燥泡袋朗喂铝软渠颗惯贸粪综墙趋彼届墨碍启逆卸航衣孙龄岭骗休借" . $addChars;
+            case 'boolean':
+            case 'bool':
+                // 是否为布尔值
+                $result = in_array($value, [true, false, 0, 1, '0', '1'], true);
                 break;
-            case 5:
-                $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' . $addChars;
+            case 'number':
+                $result = is_numeric($value);
+                break;
+            case 'array':
+                // 是否为数组
+                $result = is_array($value);
+                break;
+            case 'file':
+                $result = $value instanceof SplFileObject;
+                break;
+            case 'image':
+                $result = $value instanceof SplFileObject && in_array($this->getImageType($value->getRealPath()), [1, 2, 3, 6]);
                 break;
             default:
-                // 默认去掉了容易混淆的字符oOLl和数字01，要添加请使用addChars参数
-                $chars = 'ABCDEFGHIJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789' . $addChars;
-                break;
-        }
-        if ($len > 10) { //位数过长重复字符串一定次数
-            $chars = $type == 1 ? str_repeat($chars, $len) : str_repeat($chars, 5);
+                if (isset(self::$type[$rule])) {
+                    // 注册的验证规则
+                    $result = call_user_func_array(self::$type[$rule], [$value]);
+                } elseif (isset($this->filter[$rule])) {
+                    // Filter_var验证规则
+                    $result = $this->filter($value, $this->filter[$rule]);
+                } else {
+                    // 正则验证
+                    $result = $this->regex($value, $rule);
+                }
         }
 
-        if ($type == 4) { // 处理中文
-            $chars = preg_replace('/[^//x{4e00}-//x{9fa5}]/u', '', $chars);   // //干掉非utf8中文字符
-            $chars = chunk_split($chars, 3, ","); // //每隔3个字符插入一个“,”，转换为数组使用，使用strlen()测出php中一个中文霸占了3个
-            $re = explode(",", $chars);
-            shuffle($re); //随机重新排序数组
-            $chars = implode($re);
-            unset($re);
-            $str   =  mb_substr($chars, 0, $len, "utf-8");
+        return $result;
+    }
+
+    // 判断图像类型
+    protected function getImageType($image)
+    {
+        if (function_exists('exif_imagetype')) {
+            return exif_imagetype($image);
         } else {
-            $chars  =  str_shuffle($chars);
-            $str   =  substr($chars, 0, $len);
+            try {
+                $info = getimagesize($image);
+                return $info ? $info[2] : false;
+            } catch (\Exception $e) {
+                return false;
+            }
         }
-
-        return $str;
     }
 
-    //获取url中参数的值
-    function geturlval($url, $name)
+    /**
+     * 验证是否为合格的域名或者IP 支持A，MX，NS，SOA，PTR，CNAME，AAAA，A6， SRV，NAPTR，TXT 或者 ANY类型
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function activeUrl($value, $rule = 'MX')
     {
-        $arr = parse_url($url);
-        $arr_query = $this->convertUrlQuery($arr['query']);
+        if (!in_array($rule, ['A', 'MX', 'NS', 'SOA', 'PTR', 'CNAME', 'AAAA', 'A6', 'SRV', 'NAPTR', 'TXT', 'ANY'])) {
+            $rule = 'MX';
+        }
 
-        return $arr_query[$name];
+        return checkdnsrr($value, $rule);
     }
-    function convertUrlQuery($query)
-    {
-        $queryParts = explode('&', $query);
 
-        $params = array();
-        foreach ($queryParts as $param) {
-            $item = explode('=', $param);
-            $params[$item[0]] = $item[1];
+    /**
+     * 验证是否有效IP
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则 ipv4 ipv6
+     * @return bool
+     */
+    public function ip($value, $rule = 'ipv4')
+    {
+        if (!in_array($rule, ['ipv4', 'ipv6'])) {
+            $rule = 'ipv4';
         }
 
-        return $params;
+        return $this->filter($value, [FILTER_VALIDATE_IP, 'ipv6' == $rule ? FILTER_FLAG_IPV6 : FILTER_FLAG_IPV4]);
     }
-    /*
-    * 抓取远程图片
-    *
-    * @param string $url 远程图片路径
-    * @param string $filename 本地存储文件名
-    */
-    function grabImage($url, $savepath)
+
+    /**
+     * 检测上传文件后缀
+     * @param SplFileObject     $file  上传文件
+     * @param  array|string     $ext    允许后缀
+     * @return bool
+     */
+    protected function checkExt($file, $ext)
     {
-        if ($url == "") {
-            return false; //如果 $url 为空则返回 false;
+        $extension = strtolower(pathinfo($file->getfilename(), PATHINFO_EXTENSION));
+
+        if (is_string($ext)) {
+            $ext = explode(',', $ext);
         }
-        $ext_name = strrchr($url, '.'); //获取图片的扩展名
-        if ($ext_name != '.gif' && $ext_name != '.jpg' && $ext_name != '.bmp' && $ext_name != '.png') {
-            return false; //格式不在允许的范围
+
+        if (!in_array($extension, $ext)) {
+            return false;
         }
-        //获取原图片名
-        $filename = $savepath . '//' . end(explode('/', $url));
-        //开始捕获
-        ob_start();
-        readfile($url);
-        $img_data = ob_get_contents();
-        ob_end_clean();
-        $size = strlen($img_data);
-        $local_file = fopen($filename, 'a');
-        echo $filename;
-        if (fwrite($local_file, $img_data) == FALSE) {
-            echo '图片下载失败';
+
+        return true;
+    }
+
+    /**
+     * 验证上传文件后缀
+     * @access public
+     * @param SplFileObject     $file  上传文件
+     * @param mixed             $rule  验证规则
+     * @return bool
+     */
+    public function fileExt($file, $rule)
+    {
+        if (!($file instanceof SplFileObject)) {
+            return false;
         }
-        fclose($local_file);
-        return $filename;
+
+        return $this->checkExt($file, $rule);
+    }
+
+    /**
+     * 获取文件类型信息
+     * @param SplFileObject     $file  上传文件
+     * @return string
+     */
+    protected function getMime($file)
+    {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+
+        return finfo_file($finfo, $file->getRealPath() ?: $file->getPathname());
+    }
+
+    /**
+     * 检测上传文件类型
+     * @param SplFileObject     $file  上传文件
+     * @param  array|string     $mime    允许类型
+     * @return bool
+     */
+    protected function checkMime($file, $mime)
+    {
+        if (is_string($mime)) {
+            $mime = explode(',', $mime);
+        }
+
+        if (!in_array(strtolower($this->getMime($file)), $mime)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * 验证上传文件类型
+     * @access public
+     * @param SplFileObject     $file  上传文件
+     * @param mixed             $rule  验证规则
+     * @return bool
+     */
+    public function fileMime($file, $rule)
+    {
+        if (!($file instanceof SplFileObject)) {
+            return false;
+        }
+
+        return $this->checkMime($file, $rule);
+    }
+
+    /**
+     * 验证上传文件大小
+     * @access public
+     * @param SplFileObject     $file  上传文件
+     * @param mixed             $rule  验证规则
+     * @return bool
+     */
+    public function fileSize($file, $rule)
+    {
+        if (!($file instanceof SplFileObject)) {
+            return false;
+        }
+
+        return $file->getSize() <= $rule;
+    }
+
+    /**
+     * 验证图片的宽高及类型
+     * @access public
+     * @param SplFileObject     $file  上传文件
+     * @param mixed             $rule  验证规则
+     * @return bool
+     */
+    public function image($file, $rule)
+    {
+        if (!($file instanceof SplFileInfo)) {
+            return false;
+        }
+
+        if ($rule) {
+            $rule = explode(',', $rule);
+
+            list($width, $height, $type) = getimagesize($file->getRealPath());
+
+            if (isset($rule[2])) {
+                $imageType = strtolower($rule[2]);
+
+                if ('jpeg' == $imageType) {
+                    $imageType = 'jpg';
+                }
+
+                if (image_type_to_extension($type, false) != $imageType) {
+                    return false;
+                }
+            }
+
+            list($w, $h) = $rule;
+
+            return $w == $width && $h == $height;
+        }
+        return in_array($this->getImageType($file->getRealPath()), [1, 2, 3, 6]);
+    }
+
+    /**
+     * 验证请求类型
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function method($value, $rule)
+    {
+        return strtoupper($rule) == $_SERVER['REQUEST_METHOD'];
+    }
+
+    /**
+     * 验证时间和日期是否符合指定格式
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function dateFormat($value, $rule)
+    {
+        $info = date_parse_from_format($rule, $value);
+        return 0 == $info['warning_count'] && 0 == $info['error_count'];
+    }
+
+    /**
+     * 使用filter_var方式验证
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function filter($value, $rule)
+    {
+        if (is_string($rule) && strpos($rule, ',')) {
+            list($rule, $param) = explode(',', $rule);
+        } elseif (is_array($rule)) {
+            $param = isset($rule[1]) ? $rule[1] : null;
+            $rule  = $rule[0];
+        } else {
+            $param = null;
+        }
+
+        return false !== filter_var($value, is_int($rule) ? $rule : filter_id($rule), $param);
+    }
+
+    /**
+     * 验证某个字段等于某个值的时候必须
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @param array     $data  数据
+     * @return bool
+     */
+    public function requireIf($value, $rule, $data)
+    {
+        list($field, $val) = explode(',', $rule);
+
+        if ($this->getDataValue($data, $field) == $val) {
+            return !empty($value) || '0' == $value;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * 通过回调方法验证某个字段是否必须
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @param array     $data  数据
+     * @return bool
+     */
+    public function requireCallback($value, $rule, $data)
+    {
+        $result = call_user_func_array($rule, [$value, $data]);
+
+        if ($result) {
+            return !empty($value) || '0' == $value;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * 验证某个字段有值的情况下必须
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @param array     $data  数据
+     * @return bool
+     */
+    public function requireWith($value, $rule, $data)
+    {
+        $val = $this->getDataValue($data, $rule);
+
+        if (!empty($val)) {
+            return !empty($value) || '0' == $value;
+        } else {
+            return true;
+        }
+    }
+
+    /**
+     * 验证是否在范围内
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function in($value, $rule)
+    {
+        return in_array($value, is_array($rule) ? $rule : explode(',', $rule));
+    }
+
+    /**
+     * 验证是否不在某个范围
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function notIn($value, $rule)
+    {
+        return !in_array($value, is_array($rule) ? $rule : explode(',', $rule));
+    }
+
+    /**
+     * between验证数据
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function between($value, $rule)
+    {
+        if (is_string($rule)) {
+            $rule = explode(',', $rule);
+        }
+        list($min, $max) = $rule;
+
+        return $value >= $min && $value <= $max;
+    }
+
+    /**
+     * 使用notbetween验证数据
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function notBetween($value, $rule)
+    {
+        if (is_string($rule)) {
+            $rule = explode(',', $rule);
+        }
+        list($min, $max) = $rule;
+
+        return $value < $min || $value > $max;
+    }
+
+    /**
+     * 验证数据长度
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function length($value, $rule)
+    {
+        if (is_array($value)) {
+            $length = count($value);
+        } elseif ($value instanceof File) {
+            $length = $value->getSize();
+        } else {
+            $length = mb_strlen((string) $value);
+        }
+
+        if (strpos($rule, ',')) {
+            // 长度区间
+            list($min, $max) = explode(',', $rule);
+            return $length >= $min && $length <= $max;
+        } else {
+            // 指定长度
+            return $length == $rule;
+        }
+    }
+
+    /**
+     * 验证数据最大长度
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function max($value, $rule)
+    {
+        if (is_array($value)) {
+            $length = count($value);
+        } elseif ($value instanceof File) {
+            $length = $value->getSize();
+        } else {
+            $length = mb_strlen((string) $value);
+        }
+
+        return $length <= $rule;
+    }
+
+    /**
+     * 验证数据最小长度
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function min($value, $rule)
+    {
+        if (is_array($value)) {
+            $length = count($value);
+        } elseif ($value instanceof File) {
+            $length = $value->getSize();
+        } else {
+            $length = mb_strlen((string) $value);
+        }
+
+        return $length >= $rule;
+    }
+
+    /**
+     * 验证日期
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function after($value, $rule)
+    {
+        return strtotime($value) >= strtotime($rule);
+    }
+
+    /**
+     * 验证日期
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function before($value, $rule)
+    {
+        return strtotime($value) <= strtotime($rule);
+    }
+
+    /**
+     * 验证有效期
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return bool
+     */
+    public function expire($value, $rule)
+    {
+        if (is_string($rule)) {
+            $rule = explode(',', $rule);
+        }
+
+        list($start, $end) = $rule;
+
+        if (!is_numeric($start)) {
+            $start = strtotime($start);
+        }
+
+        if (!is_numeric($end)) {
+            $end = strtotime($end);
+        }
+
+        return $_SERVER['REQUEST_TIME'] >= $start && $_SERVER['REQUEST_TIME'] <= $end;
+    }
+
+    /**
+     * 验证IP许可
+     * @access public
+     * @param string    $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return mixed
+     */
+    public function allowIp($value, $rule)
+    {
+        return in_array($value, is_array($rule) ? $rule : explode(',', $rule));
+    }
+
+    /**
+     * 验证IP禁用
+     * @access public
+     * @param string    $value  字段值
+     * @param mixed     $rule  验证规则
+     * @return mixed
+     */
+    public function denyIp($value, $rule)
+    {
+        return !in_array($value, is_array($rule) ? $rule : explode(',', $rule));
+    }
+
+    /**
+     * 使用正则验证数据
+     * @access public
+     * @param mixed     $value  字段值
+     * @param mixed     $rule  验证规则 正则规则或者预定义正则名
+     * @return mixed
+     */
+    public function regex($value, $rule)
+    {
+        if (isset($this->regex[$rule])) {
+            $rule = $this->regex[$rule];
+        }
+
+        if (0 !== strpos($rule, '/') && !preg_match('/\/[imsU]{0,4}$/', $rule)) {
+            // 不是正则表达式则两端补上/
+            $rule = '/^' . $rule . '$/';
+        }
+
+        return is_scalar($value) && 1 === preg_match($rule, (string) $value);
+    }
+
+    // 获取错误信息
+    public function getError()
+    {
+        return $this->error;
+    }
+
+    /**
+     * 获取数据值
+     * @access protected
+     * @param array     $data  数据
+     * @param string    $key  数据标识 支持二维
+     * @return mixed
+     */
+    protected function getDataValue($data, $key)
+    {
+        if (is_numeric($key)) {
+            $value = $key;
+        } elseif (strpos($key, '.')) {
+            // 支持二维数组验证
+            list($name1, $name2) = explode('.', $key);
+            $value               = isset($data[$name1][$name2]) ? $data[$name1][$name2] : null;
+        } else {
+            $value = isset($data[$key]) ? $data[$key] : null;
+        }
+
+        return $value;
+    }
+
+    /**
+     * 获取验证规则的错误提示信息
+     * @access protected
+     * @param string    $attribute  字段英文名
+     * @param string    $title  字段描述名
+     * @param string    $type  验证规则名称
+     * @param mixed     $rule  验证规则数据
+     * @return string
+     */
+    protected function getRuleMsg($attribute, $title, $type, $rule)
+    {
+        if (isset($this->message[$attribute . '.' . $type])) {
+            $msg = $this->message[$attribute . '.' . $type];
+        } elseif (isset($this->message[$attribute][$type])) {
+            $msg = $this->message[$attribute][$type];
+        } elseif (isset($this->message[$attribute])) {
+            $msg = $this->message[$attribute];
+        } elseif (isset(self::$typeMsg[$type])) {
+            $msg = self::$typeMsg[$type];
+        } elseif (0 === strpos($type, 'require')) {
+            $msg = self::$typeMsg['require'];
+        } else {
+            $msg = $title . '规则不符';
+        }
+
+        if (is_string($msg) && is_scalar($rule) && false !== strpos($msg, ':')) {
+            // 变量替换
+            if (is_string($rule) && strpos($rule, ',')) {
+                $array = array_pad(explode(',', $rule), 3, '');
+            } else {
+                $array = array_pad([], 3, '');
+            }
+            $msg = str_replace(
+                [':attribute', ':rule', ':1', ':2', ':3'],
+                [$title, (string) $rule, $array[0], $array[1], $array[2]],
+                $msg);
+        }
+
+        return $msg;
+    }
+
+    /**
+     * 获取数据验证的场景
+     * @access protected
+     * @param string $scene  验证场景
+     * @return array
+     */
+    protected function getScene($scene = '')
+    {
+        if (empty($scene)) {
+            // 读取指定场景
+            $scene = $this->currentScene;
+        }
+
+        $this->only = $this->append = $this->remove = [];
+
+        if (empty($scene)) {
+            return;
+        }
+
+        if (method_exists($this, 'scene' . $scene)) {
+            call_user_func([$this, 'scene' . $scene]);
+        } elseif (isset($this->scene[$scene])) {
+            // 如果设置了验证适用场景
+            $scene = $this->scene[$scene];
+
+            if (is_string($scene)) {
+                $scene = explode(',', $scene);
+            }
+
+            $this->only = $scene;
+        }
+    }
+
+    /**
+     * 动态方法 直接调用is方法进行验证
+     * @access protected
+     * @param string $method  方法名
+     * @param array $args  调用参数
+     * @return bool
+     */
+    public function __call($method, $args)
+    {
+        if ('is' == strtolower(substr($method, 0, 2))) {
+            $method = substr($method, 2);
+        }
+
+        array_push($args, lcfirst($method));
+
+        return call_user_func_array([$this, 'is'], $args);
     }
 }

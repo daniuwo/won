@@ -1,0 +1,60 @@
+.layui-layer-btn .layui-layer-btn0 {
+    border-color: #00c0ef !important;
+    background-color: #00c0ef !important;
+    color: #fff;
+}
+.layui-layer-btn a {
+    height: 30px !important;
+    border: 1px solid #dedede !important;
+    background-color: #dedede !important;
+}
+.layui-layer-btn{
+    text-align: left !important;
+    background: #f8f8f8;
+}
+.layui-layer-title {
+    border-bottom: 1px solid #607D8B !important;
+    color: #fff !important;
+    background-color: #607D8B !important;
+    
+}
+.layui-layer-setwin .layui-layer-min cite{
+    background-color: #fff !important;
+}
+.layui-layer-setwin .layui-layer-close1{
+    background:url('/Static/images/close-line.png');
+    background-size: 100%;
+    background-position: 0 !important;
+}
+.layui-layer-setwin .layui-layer-maxmin{
+    background:url('/Static/images/fullscreen-exit-line.png');
+    background-size: 100%;
+    background-position: 0 !important;
+}
+.layui-layer-setwin .layui-layer-max{
+    background:url('/Static/images/fullscreen-line.png');
+    background-size: 100%;
+    background-position: 0 !important;
+}
+.openwindow{
+    height: calc(100vh - 50px);
+    overflow-y: scroll;
+}
+.layui-layer-btn{
+    padding: 10px !important;
+}
+.table>tbody>tr>td{
+    padding: 5px;
+}
+.layui-layer-border {
+    /* border: 1px solid #B2B2B2; */
+    border: 0 !important;
+    border-bottom: 1px 2px solid #607D8B;
+    box-shadow: 1px 1px 25px rgba(0,0,0,.2) !important;
+}
+select.form-control {
+    background: #f5f5f5;
+}
+.table tbody tr:hover{
+    background-color: #e1f9ff;
+}

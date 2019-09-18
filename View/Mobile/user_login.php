@@ -88,6 +88,13 @@
             success: function (e) {
                 if(e.error){
                     toast(e.msg)
+                    setTimeout(() => {
+                        if(e.url !='' && e.url != 'NULL' && e.url != 'null'){
+                            window.location.href = e.data.url
+                        }else{
+                            window.location.href = WWW
+                        }
+                    }, 1500);
                 }else{
                     toast(e.msg)
                     if(e.data.type == 'user'){

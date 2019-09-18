@@ -13,6 +13,9 @@
     <script src="//cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.bootcss.com/mdui/0.4.3/js/mdui.min.js"></script>
     <script src="<?php echo WWW_STATIC;?>mobile/js/app.js"></script>
+    <script>
+        var WWW = '<?php echo WWW;?>';
+    </script>
 </head>
 <body class="mdui-theme-primary-blue-grey mdui-theme-accent-deep-purple" style="background:#f1f5f7">
 
@@ -72,7 +75,7 @@
                         <img src="<?php echo WWW_STATIC;?>images/maintenance.png"
                             class="responsive-img maintenance-img" alt="">
                         <h4 class="error-code">网站正在维护中</h4>
-                        <h6 class="mb-2 mt-2">对于给您带来的不便，我们深表歉意。 <br> 请稍后再回来查看</h6>
+                        <h6 class="mb-2 mt-2"><?php echo $msg;?></h6>
                         <a class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent" href="<?php echo URL('/admin');?>">管理员登录</a>
                     </div>
                 </div>

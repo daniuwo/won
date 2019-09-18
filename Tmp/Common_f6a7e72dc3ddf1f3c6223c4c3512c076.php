@@ -4,7 +4,7 @@
 // | Author: 红着自己玩 <956716282@qq.com>
 // | Date: 2019-08-27 13:32:57 
 // | LastEditors: 红着自己玩 <956716282@qq.com>
-// | LastEditTime: 2019-08-29 11:29:07 
+// | LastEditTime: 2019-09-18 09:51:07 
 // | Github: https://github.com/daniuwo/won.git
 // | Copyright (c) 2019 http://won.cm All rights reserved.
 // +------------------------------------------------------
@@ -16,7 +16,8 @@ class Common extends Action{
     public $_user   = [];
     public $_uid    = 0;
     public $_group  = 0;
-    public $_agroup = 0; // 管理员组 0 非管理员 1系统管理员 2超级管理员 
+    public $_agroup = 0; // 非管理员 0
+    public $_conf   = [];
     public function __construct()
     {
         if(IS_MOBILE){
@@ -24,12 +25,14 @@ class Common extends Action{
         }else{
             $this->view = 'Index';
         }
-        
+    
         if ( (! empty($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == 'https') || (! empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (! empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == '443') ) {
             $server_request_scheme = 'https://';
            } else {
             $server_request_scheme = 'http://';
         }
+        // 初始化网站配置
+        $this->init_conf();
         // 实例化用户
         $this->init_user();
         define('THEME',$this->view);
@@ -41,6 +44,17 @@ class Common extends Action{
         define('IS_LOGIN',$this->_login);
         $this->v('user',$this->_user);
         $this->v('title','未定义标题');
+    }
+    //初始化网站配置
+    protected function init_conf(){
+        $Config = S('config');
+        $dataConfig = $Config->find('*');
+        // 网站配置
+        $config_www = unserialize($dataConfig['config_www']);
+        $this->_conf = $config_www;
+        $this->_conf['title2'] = ' - Powered by 蜗牛建站系统';
+        $this->_conf['config_email'] = unserialize($dataConfig['config_email']);
+        $this->v('conf',$this->_conf);
     }
     //初始化 用户
     protected function init_user(){
@@ -99,7 +113,7 @@ class Common extends Action{
         $this->v('title',$msg.' - 提示');
         $this->v("msg",$msg);
         $this->v("bool",$error);
-        return $this->display('message');
+        $this->display('message');exit;
     }
     // +------------------------------------------------------
     // | description: 作为Api数据返回

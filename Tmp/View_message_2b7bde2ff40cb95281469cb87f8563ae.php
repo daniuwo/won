@@ -1,6 +1,6 @@
 <?php !defined('HY_PATH') && exit('HY_PATH not defined.'); ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
@@ -13,6 +13,9 @@
     <script src="//cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.bootcss.com/mdui/0.4.3/js/mdui.min.js"></script>
     <script src="<?php echo WWW_STATIC;?>mobile/js/app.js"></script>
+    <script>
+        var WWW = '<?php echo WWW;?>';
+    </script>
 </head>
 <body class="mdui-theme-primary-blue-grey mdui-theme-accent-deep-purple" style="background:#f1f5f7">
 

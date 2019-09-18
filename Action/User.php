@@ -4,14 +4,14 @@
 // | Author: 红着自己玩 <956716282@qq.com>
 // | Date: 2019-08-27 13:33:38 
 // | LastEditors: 红着自己玩 <956716282@qq.com>
-// | LastEditTime: 2019-08-29 09:42:21 
+// | LastEditTime: 2019-09-05 07:26:56 
 // | Github: https://github.com/daniuwo/won.git
 // | Copyright (c) 2019 http://won.cm All rights reserved.
 // +------------------------------------------------------
 namespace Action;
 class User extends Common
 {
-    public function login(){
+    public function Login(){
         if(IS_LOGIN){
             return $this->msg('您已登录');
         }
@@ -46,7 +46,7 @@ class User extends Common
                 'ip'    => CLIENT_IP
             ]);
             $userData['cookie'] = "WN_HEX=".$cookie;
-            cookie('WN_HEX',$cookie);
+            cookie('WN_HEX',$cookie,604800);
             // 返回api
             if($rtype == 'json'){
                 return $this->Api('success',1,$userData);

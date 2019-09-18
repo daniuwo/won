@@ -55,7 +55,7 @@
                         <img src="{#WWW_STATIC}images/maintenance.png"
                             class="responsive-img maintenance-img" alt="">
                         <h4 class="error-code">网站正在维护中</h4>
-                        <h6 class="mb-2 mt-2">对于给您带来的不便，我们深表歉意。 <br> 请稍后再回来查看</h6>
+                        <h6 class="mb-2 mt-2">{$msg}</h6>
                         <a class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent" href="{#URL('/admin')}">管理员登录</a>
                     </div>
                 </div>

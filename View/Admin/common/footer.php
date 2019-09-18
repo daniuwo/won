@@ -1,239 +1,206 @@
- <!-- Theme Customizer -->
+  <footer class="main-footer">
+    <div class="pull-right hidden-xs">
+      <b>Version</b> 2.4.18
+    </div>
+    <strong>Copyright &copy; 2014-2019 <a href="https://adminlte.io">AdminLTE</a>.</strong> All rights
+    reserved.
+  </footer>
+<style>
+#control-sidebar-theme-demo-options-tab .form-group p{
+   font-size:12px;
+}
+</style>
+  <!-- Control Sidebar -->
+  <aside class="control-sidebar control-sidebar-dark">
+    <!-- Create the tabs -->
+    <ul class="nav nav-tabs nav-justified control-sidebar-tabs">
+      <li><a href="#control-sidebar-home-tab" data-toggle="tab"><i class="fa fa-home"></i></a></li>
 
- <a href="#" data-target="theme-cutomizer-out" class="btn btn-customizer pink accent-2 white-text sidenav-trigger theme-cutomizer-trigger" ><i class="material-icons">settings</i></a>
-   <div id="theme-cutomizer-out" class="theme-cutomizer sidenav row">
-      <div class="col s12">
-         <a class="sidenav-close" href="#!"><i class="material-icons">close</i></a>
-         <h5 class="theme-cutomizer-title">Theme Customizer</h5>
-         <p class="medium-small">Customize & Preview in Real Time</p>
-         <div class="menu-options">
-            <h6 class="mt-6">Menu Options</h6>
-            <hr class="customize-devider" />
-            <div class="menu-options-form row">
-               <div class="input-field col s12 menu-color mb-0">
-                  <p class="mt-0">Menu Color</p>
-                  <div class="gradient-color center-align">
-                     <span class="menu-color-option gradient-45deg-indigo-blue" data-color="gradient-45deg-indigo-blue"></span>
-                     <span
-                        class="menu-color-option gradient-45deg-purple-deep-orange"
-                        data-color="gradient-45deg-purple-deep-orange"
-                     ></span>
-                     <span
-                        class="menu-color-option gradient-45deg-light-blue-cyan"
-                        data-color="gradient-45deg-light-blue-cyan"
-                     ></span>
-                     <span
-                        class="menu-color-option gradient-45deg-purple-amber"
-                        data-color="gradient-45deg-purple-amber"
-                     ></span>
-                     <span
-                        class="menu-color-option gradient-45deg-purple-deep-purple"
-                        data-color="gradient-45deg-purple-deep-purple"
-                     ></span>
-                     <span
-                        class="menu-color-option gradient-45deg-deep-orange-orange"
-                        data-color="gradient-45deg-deep-orange-orange"
-                     ></span>
-                     <span class="menu-color-option gradient-45deg-green-teal" data-color="gradient-45deg-green-teal"></span>
-                     <span
-                        class="menu-color-option gradient-45deg-indigo-light-blue"
-                        data-color="gradient-45deg-indigo-light-blue"
-                     ></span>
-                     <span class="menu-color-option gradient-45deg-red-pink" data-color="gradient-45deg-red-pink"></span>
-                  </div>
-                  <div class="solid-color center-align">
-                     <span class="menu-color-option red" data-color="red"></span>
-                     <span class="menu-color-option purple" data-color="purple"></span>
-                     <span class="menu-color-option pink" data-color="pink"></span>
-                     <span class="menu-color-option deep-purple" data-color="deep-purple"></span>
-                     <span class="menu-color-option cyan" data-color="cyan"></span>
-                     <span class="menu-color-option teal" data-color="teal"></span>
-                     <span class="menu-color-option light-blue" data-color="light-blue"></span>
-                     <span class="menu-color-option amber darken-3" data-color="amber darken-3"></span>
-                     <span class="menu-color-option brown darken-2" data-color="brown darken-2"></span>
-                  </div>
-               </div>
-               <div class="input-field col s12 menu-bg-color mb-0">
-                  <p class="mt-0">Menu Background Color</p>
-                  <div class="gradient-color center-align">
-                     <span
-                        class="menu-bg-color-option gradient-45deg-indigo-blue"
-                        data-color="gradient-45deg-indigo-blue"
-                     ></span>
-                     <span
-                        class="menu-bg-color-option gradient-45deg-purple-deep-orange"
-                        data-color="gradient-45deg-purple-deep-orange"
-                     ></span>
-                     <span
-                        class="menu-bg-color-option gradient-45deg-light-blue-cyan"
-                        data-color="gradient-45deg-light-blue-cyan"
-                     ></span>
-                     <span
-                        class="menu-bg-color-option gradient-45deg-purple-amber"
-                        data-color="gradient-45deg-purple-amber"
-                     ></span>
-                     <span
-                        class="menu-bg-color-option gradient-45deg-purple-deep-purple"
-                        data-color="gradient-45deg-purple-deep-purple"
-                     ></span>
-                     <span
-                        class="menu-bg-color-option gradient-45deg-deep-orange-orange"
-                        data-color="gradient-45deg-deep-orange-orange"
-                     ></span>
-                     <span class="menu-bg-color-option gradient-45deg-green-teal" data-color="gradient-45deg-green-teal"></span>
-                     <span
-                        class="menu-bg-color-option gradient-45deg-indigo-light-blue"
-                        data-color="gradient-45deg-indigo-light-blue"
-                     ></span>
-                     <span class="menu-bg-color-option gradient-45deg-red-pink" data-color="gradient-45deg-red-pink"></span>
-                  </div>
-                  <div class="solid-color center-align">
-                     <span class="menu-bg-color-option red" data-color="red"></span>
-                     <span class="menu-bg-color-option purple" data-color="purple"></span>
-                     <span class="menu-bg-color-option pink" data-color="pink"></span>
-                     <span class="menu-bg-color-option deep-purple" data-color="deep-purple"></span>
-                     <span class="menu-bg-color-option cyan" data-color="cyan"></span>
-                     <span class="menu-bg-color-option teal" data-color="teal"></span>
-                     <span class="menu-bg-color-option light-blue" data-color="light-blue"></span>
-                     <span class="menu-bg-color-option amber darken-3" data-color="amber darken-3"></span>
-                     <span class="menu-bg-color-option brown darken-2" data-color="brown darken-2"></span>
-                  </div>
-               </div>
-               <div class="input-field col s12">
-                  <div class="switch">
-                     Menu Dark
-                     <label class="float-right"
-                        ><input class="menu-dark-checkbox" type="checkbox"/> <span class="lever ml-0"></span
-                     ></label>
-                  </div>
-               </div>
-               <div class="input-field col s12">
-                  <div class="switch">
-                     Menu Collapsed
-                     <label class="float-right"
-                        ><input class="menu-collapsed-checkbox" type="checkbox"/> <span class="lever ml-0"></span
-                     ></label>
-                  </div>
-               </div>
-               <div class="input-field col s12">
-                  <div class="switch">
-                     <p class="mt-0">Menu Selection</p>
-                     <label>
-                        <input
-                           class="menu-selection-radio with-gap"
-                           value="sidenav-active-square"
-                           name="menu-selection"
-                           type="radio"
-                        />
-                        <span>Square</span>
-                     </label>
-                     <label>
-                        <input
-                           class="menu-selection-radio with-gap"
-                           value="sidenav-active-rounded"
-                           name="menu-selection"
-                           type="radio"
-                        />
-                        <span>Rounded</span>
-                     </label>
-                     <label>
-                        <input class="menu-selection-radio with-gap" value="" name="menu-selection" type="radio" />
-                        <span>Normal</span>
-                     </label>
-                  </div>
-               </div>
-            </div>
-         </div>
-         <h6 class="mt-6">Navbar Options</h6>
-         <hr class="customize-devider" />
-         <div class="navbar-options row">
-            <div class="input-field col s12 navbar-color mb-0">
-               <p class="mt-0">Navbar Color</p>
-               <div class="gradient-color center-align">
-                  <span class="navbar-color-option gradient-45deg-indigo-blue" data-color="gradient-45deg-indigo-blue"></span>
-                  <span
-                     class="navbar-color-option gradient-45deg-purple-deep-orange"
-                     data-color="gradient-45deg-purple-deep-orange"
-                  ></span>
-                  <span
-                     class="navbar-color-option gradient-45deg-light-blue-cyan"
-                     data-color="gradient-45deg-light-blue-cyan"
-                  ></span>
-                  <span class="navbar-color-option gradient-45deg-purple-amber" data-color="gradient-45deg-purple-amber"></span>
-                  <span
-                     class="navbar-color-option gradient-45deg-purple-deep-purple"
-                     data-color="gradient-45deg-purple-deep-purple"
-                  ></span>
-                  <span
-                     class="navbar-color-option gradient-45deg-deep-orange-orange"
-                     data-color="gradient-45deg-deep-orange-orange"
-                  ></span>
-                  <span class="navbar-color-option gradient-45deg-green-teal" data-color="gradient-45deg-green-teal"></span>
-                  <span
-                     class="navbar-color-option gradient-45deg-indigo-light-blue"
-                     data-color="gradient-45deg-indigo-light-blue"
-                  ></span>
-                  <span class="navbar-color-option gradient-45deg-red-pink" data-color="gradient-45deg-red-pink"></span>
-               </div>
-               <div class="solid-color center-align">
-                  <span class="navbar-color-option red" data-color="red"></span>
-                  <span class="navbar-color-option purple" data-color="purple"></span>
-                  <span class="navbar-color-option pink" data-color="pink"></span>
-                  <span class="navbar-color-option deep-purple" data-color="deep-purple"></span>
-                  <span class="navbar-color-option cyan" data-color="cyan"></span>
-                  <span class="navbar-color-option teal" data-color="teal"></span>
-                  <span class="navbar-color-option light-blue" data-color="light-blue"></span>
-                  <span class="navbar-color-option amber darken-3" data-color="amber darken-3"></span>
-                  <span class="navbar-color-option brown darken-2" data-color="brown darken-2"></span>
-               </div>
-            </div>
-            <div class="input-field col s12">
-               <div class="switch">
-                  Navbar Dark
-                  <label class="float-right"
-                     ><input class="navbar-dark-checkbox" type="checkbox"/> <span class="lever ml-0"></span
-                  ></label>
-               </div>
-            </div>
-            <div class="input-field col s12">
-               <div class="switch">
-                  Navbar Fixed
-                  <label class="float-right"
-                     ><input class="navbar-fixed-checkbox" type="checkbox" checked/> <span class="lever ml-0"></span
-                  ></label>
-               </div>
-            </div>
-         </div>
-         <h6 class="mt-6">Footer Options</h6>
-         <hr class="customize-devider" />
-         <div class="navbar-options row">
-            <div class="input-field col s12">
-               <div class="switch">
-                  Footer Dark
-                  <label class="float-right"
-                     ><input class="footer-dark-checkbox" type="checkbox"/> <span class="lever ml-0"></span
-                  ></label>
-               </div>
-            </div>
-            <div class="input-field col s12">
-               <div class="switch">
-                  Footer Fixed
-                  <label class="float-right"
-                     ><input class="footer-fixed-checkbox" type="checkbox"/> <span class="lever ml-0"></span
-                  ></label>
-               </div>
-            </div>
-         </div>
+      <li><a href="#control-sidebar-settings-tab" data-toggle="tab"><i class="fa fa-gears"></i></a></li>
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content">
+      <!-- Home tab content -->
+      <div class="tab-pane" id="control-sidebar-home-tab">
+        <h3 class="control-sidebar-heading">近期活动</h3>
+        <ul class="control-sidebar-menu">
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-birthday-cake bg-red"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">兰登诞辰纪念日</h4>
+
+                <p>将于4月24日23日</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-user bg-yellow"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">佛罗多更新了他的档案</h4>
+
+                <p>新手机+1(800)555-1234</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-envelope-o bg-light-blue"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">诺拉加入邮件列表</h4>
+
+                <p>nora@example.com</p>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <i class="menu-icon fa fa-file-code-o bg-green"></i>
+
+              <div class="menu-info">
+                <h4 class="control-sidebar-subheading">Cron Job 254已执行</h4>
+
+                <p>执行时间5秒</p>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <!-- /.control-sidebar-menu -->
+
+        <h3 class="control-sidebar-heading">任务进度</h3>
+        <ul class="control-sidebar-menu">
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                自定义模板设计
+                 <span class="label label-danger pull-right">70％</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-danger" style="width: 70%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                更新恢复
+                 <span class="label label-success pull-right">95％</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-success" style="width: 95%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                Laravel整合
+                 <span class="label label-warning pull-right">50％</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-warning" style="width: 50%"></div>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a href="javascript:void(0)">
+              <h4 class="control-sidebar-subheading">
+                后端框架
+                 <span class="label label-primary pull-right">68％</span>
+              </h4>
+
+              <div class="progress progress-xxs">
+                <div class="progress-bar progress-bar-primary" style="width: 68%"></div>
+              </div>
+            </a>
+          </li>
+        </ul>
+        <!-- /.control-sidebar-menu -->
+
       </div>
-   </div>
-   <!--/ Theme Customizer -->
+      <!-- /.tab-pane -->
+      <!-- Stats tab content -->
+      <div class="tab-pane" id="control-sidebar-stats-tab">统计选项卡内容</div>
+      <!-- /.tab-pane -->
+      <!-- Settings tab content -->
+      <div class="tab-pane" id="control-sidebar-settings-tab">
+        <form method="post">
+          <h3 class="control-sidebar-heading">常规设置</h3>
 
-   <a href="https://themeforest.net/item/materialize-material-design-admin-template/11446068?ref=PIXINVENT" target="_blank" class="btn btn-buy-now gradient-45deg-indigo-purple gradient-shadow white-text tooltipped buy-now-animated tada" data-position="left" data-tooltip="Buy Now!" ><i class="material-icons">add_shopping_cart</i></ >
-    
-    <!-- BEGIN: Footer-->
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              报告面板用法
+              <input type="checkbox" class="pull-right" checked="">
+            </label>
 
-    <footer class="page-footer footer footer-static footer-dark gradient-45deg-indigo-purple gradient-shadow navbar-border navbar-shadow">
-      <div class="footer-copyright">
-        <div class="container"><span>&copy; 2019          <a href="http://themeforest.net/user/pixinvent/portfolio?ref=pixinvent" target="_blank">PIXINVENT</a> All rights reserved.</span><span class="right hide-on-small-only">Design and Developed by <a href="https://pixinvent.com/">PIXINVENT</a></span></div>
+            <p>
+              有关此常规设置选项的一些信息
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              允许邮件重定向
+              <input type="checkbox" class="pull-right" checked="">
+            </label>
+
+            <p>
+              其他选项可供选择
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              在帖子中公开作者姓名
+              <input type="checkbox" class="pull-right" checked="">
+            </label>
+
+            <p>
+              允许用户在博客帖子中显示他的名字
+            </p>
+          </div>
+          <!-- /.form-group -->
+
+          <h3 class="control-sidebar-heading">聊天设置</h3>
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              告诉我在线
+              <input type="checkbox" class="pull-right" checked="">
+            </label>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              关闭通知
+              <input type="checkbox" class="pull-right">
+            </label>
+          </div>
+          <!-- /.form-group -->
+
+          <div class="form-group">
+            <label class="control-sidebar-subheading">
+              删除聊天记录
+              <a href="javascript:void(0)" class="text-red pull-right"><i class="fa fa-trash-o"></i></a>
+            </label>
+          </div>
+          <!-- /.form-group -->
+        </form>
       </div>
-    </footer>
+      <!-- /.tab-pane -->
+    </div>
+  </aside>
+  <!-- /.control-sidebar -->
+  <!-- Add the sidebar's background. This div must be placed
+       immediately after the control sidebar -->
+  <div class="control-sidebar-bg"></div>
